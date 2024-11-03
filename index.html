@@ -3,7 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./src/style.css" />
+    <link
+      rel="stylesheet"
+      href="./src/bootstrap/css/bootstrap.min.css"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
     <title>PHP SKill Test | Rohmat</title>
   </head>
-  <body></body>
+  <body>
+    <div class="container-sm mt-3">
+      <h1 class="text-center">PHP SKill Test</h1>
+      <p class="text-center">Rohmat Sidiq Mustaqim</p>
+
+      <div id="alert"></div>
+
+      <div class="card mt-3">
+        <div class="card-body">
+          <!-- Form for Creating and Updating -->
+          <form id="crudForm">
+            <input type="hidden" id="id" name="id" />
+
+            <div class="mb-3">
+              <label for="product_name" class="form-label">Product Name</label>
+              <input
+                type="text"
+                class="form-control"
+                id="product_name"
+                name="product_name"
+              />
+            </div>
+
+            <div class="row">
+              <div class="mb-3 col-6">
+                <label for="stock" class="form-label">Stock</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="stock"
+                  name="stock"
+                />
+              </div>
+
+              <div class="mb-3 col-6">
+                <label for="price" class="form-label">Price</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="price"
+                  name="price"
+                />
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit">Save</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mt-3 mb-3">
+        <div class="card-body">
+          <!-- Data Display Table -->
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Stock</th>
+                <th>Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function readData() {
+        fetch("read.php")
+          .then((response) => response.json())
+          .then((data) => {
+            let rows = "";
+            data.forEach((item) => {
+              rows += `
+                <tr>
+                  <td>${item.product_name}</td>
+                  <td>${item.stock}</td>
+                  <td>${item.price}</td>
+                  <td>
+                      <button class='btn btn-sm btn-warning' onclick="editData('${item.id}', \`${item.product_name}\`, \`${item.stock}\`, \`${item.price}\`)">Edit</button>
+                      <button class='btn btn-sm btn-danger' onclick="deleteData('${item.id}')">Delete</button>
+                  </td>
+                </tr>`;
+            });
+            document.getElementById("dataTable").innerHTML = rows;
+
+            // Reset form dan kosongkan id
+            document.getElementById("crudForm").reset();
+            document.getElementById("id").value = "";
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+
+      document
+        .getElementById("crudForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          const id = formData.get("id");
+          const url = id ? "update.php" : "create.php";
+
+          fetch(url, {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              document.getElementById(
+                "alert"
+              ).innerHTML = `<div class="alert alert-success">
+                      <p class="mb-0">${
+                        id
+                          ? "Success update data product"
+                          : "Success create data product"
+                      }</p>
+                    </div>`;
+              this.reset(); // Reset form
+              document.getElementById("id").value = ""; // Kosongkan field id
+              readData();
+            });
+        });
+
+      function editData(id, product_name, stock, price) {
+        document.getElementById("id").value = id;
+        document.getElementById("product_name").value = product_name;
+        document.getElementById("stock").value = stock;
+        document.getElementById("price").value = price;
+      }
+
+      function deleteData(id) {
+        fetch("delete.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: id }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById(
+              "alert"
+            ).innerHTML = `<div class="alert alert-danger">
+                      <p class="mb-0">Success deleted data product</p>
+                    </div>`;
+            readData();
+          });
+      }
+
+      // Load data initially
+      readData();
+    </script>
+
+    <script src="./src/bootstrap/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>
